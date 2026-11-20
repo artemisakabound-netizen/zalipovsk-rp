@@ -1,8 +1,42 @@
-const config = {
-  apiKey: "AIzaSyAbCdEf1234567890",
-  authDomain: "zalipovsk-rp.firebaseapp.com",
-  projectId: "zalipovsk-rp",
-  storageBucket: "zalipovsk-rp.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123"
-};
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Залиповский вестник — Новости</title>
+<style>
+:*{margin:0;padding:0;box-sizing:border-box}
+body{background:#05050a;color:#e8e8f0;padding:2rem}
+.card{background:#121220;border:1px solid #00d4ff;border-radius:12px;padding:1.2rem;margin-bottom:1rem}
+.meta{color:#8a8a9a;font-size:0.85rem;margin-bottom:0.6rem}
+h1{color:#00d4ff;margin-bottom:1rem}
+.empty{border:1px solid #00d4ff;border-radius:12px;padding:2rem;text-align:center;color:#8a8a9a}
+</style>
+</head>
+<body>
+<nav class="nav"><a href="index.html">Назад</a> <a href="panel.html">Панель</a></nav>
+<h1>Глобальные новости</h1>
+<div id="feed"></div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js';
+import { getFirestore, collection, query, getDocs } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js';
+
+const firebaseConfig = { /* реальные данные из Firebase */ };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(user => {
+  const q = query(collection(db,'news'), where('published','==',true));
+  getDocs(q).then(snap => {
+    if(!snap.docs.length) { document.getElementById('feed').innerHTML = '<div class="empty">Новей пока нет.</div>'; return; }
+    document.getElementById('feed').innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      return `<div class="card"><div class="meta">${new Date(data.createdAt).toLocaleDateString('ru-RU')} • ${data.author}</div><h3>${data.title}</h3><p>${data.content.substring(0,150)}${data.content.length>150?'…':''}</p></div>`;
+    }).join('');
+  });
+});
+</script>
+</body>
+</html>
