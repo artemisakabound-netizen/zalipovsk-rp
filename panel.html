@@ -1,8 +1,126 @@
-const config = {
-  apiKey: "AIzaSyAbCdEf1234567890",
-  authDomain: "zalipovsk-rp.firebaseapp.com",
-  projectId: "zalipovsk-rp",
-  storageBucket: "zalipovsk-rp.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:abc123"
-};
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Панель управления</title>
+<style>
+:*{margin:0;padding:0;box-sizing:border-box}
+body{background:#05050a;color:#e8e8f0;padding:2rem;max-width:1100px;margin:0 auto}
+.section{background:#121220;border:1px solid #00d4ff;border-radius:12px;padding:1.2rem;margin-bottom:1.5rem}
+.f{margin-bottom:0.8rem}
+.f label{display:block;font-size:0.85rem;margin-bottom:0.3rem}
+.f input,.f textarea{width:100%;padding:10px;border:1px solid #333;border-radius:8px;background:#0a0a0a;color:#e8e8f0;font-size:1rem}
+.f textarea{height:140px;resize:vertical}
+.btns{display:flex;gap:0.8rem;margin-top:1rem}
+.status{padding:10px;border-radius:8px;font-size:0.9rem;margin-top:0.5rem}
+.ok{background:#22c55e;color:#05050a}
+.err{background:#ff6b6b;color:#fff}
+</style>
+</head>
+<body>
+
+<nav class="nav"><a href="index.html">Главная</a></nav>
+
+<!-- 1. РЕДАКТОР -->
+<div class="section">
+  <h2>Новая глобальная новость</h2>
+  <div class="f"><label>Заголовок</label><input type="text" id="nt"></div>
+  <div class="f"><label>Текст</label><textarea id="nc"></textarea></div>
+  <div class="f"><label>Категория</label><select id="ncat"><option value="Событие">Событие</option><option value="СМИ">СМИ</option><option value="Обновление">Обновление</option></select></div>
+  <div class="btns">
+    <button onclick="publish()">Опубликовать</button>
+    <div class="status" id="s1" style="display:none"></div>
+  </div>
+</div>
+
+<!-- 2. РОЛИ -->
+<div class="section">
+  <h2>Управление ролями</h2>
+  <p style="color:#8a8a9a;margin-bottom:1rem;">Только владелец может это делать.</p>
+
+  <div class="f">
+    <label>Имя игрока (display)</label>
+    <input type="text" id="ru" placeholder="sl1fer">
+  </div>
+  <div class="f">
+    <label>Роль</label>
+    <select id="rr"><option value="owner">Владелец</option><option value="media">СМИ</option><option value="user">Игрок</option></select>
+  </div>
+  <div class="btns">
+    <button onclick="setRole()">Выдать роль</button>
+    <div class="status" id="s2" style="display:none"></div>
+  </div>
+
+  <div class="f">
+    <label>Галочка:</label>
+    <span id="check">—</span>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
+import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js';
+import { getFirestore, collection, query, getDocs, doc, setDoc, addDoc } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js';
+
+const firebaseConfig = { /* реальные данные из Firebase */ };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(user => {
+  if(!user) { document.body.innerHTML = '<p>Войти: email <input id="e"> password <input id="p" type="password"> <button onclick="login()">Войти</button></p>'; return; }
+
+  const uid = user.uid;
+  const userDoc = doc(db,'users',uid);
+  getDocs(query(collection(db,'users'), where('uid','==',uid))).then(snap => {
+    const info = snap.docs.length ? snap.docs[0].data() : {display:'(нет)',role:'user'};
+    const display = info.display || '(нет)';
+
+    // Галочка sl1fer
+    const check = document.getElementById('check');
+    if(display === 'sl1fer') check.innerHTML = '<span class="badge">✓ sl1fer — ВЛАДЕЛЕЦ</span>';
+    else check.innerHTML = `<span class="danger">${display} — роль: ${info.role}</span>`;
+
+    // Доступ к редактору
+    const isOwner = (info.role === 'owner');
+    const isMedia = (info.role === 'media');
+    const editor = document.querySelector('.section:first-child');
+    if(!isOwner && !isMedia) {
+      editor.innerHTML = '<p class="err">Нет доступа. Роль: ' + info.role + '</p>';
+    }
+
+    // Доступ к управлению
+    const mgmt = document.querySelector('.section:nth-child(2)');
+    if(!isOwner) mgmt.querySelector('p').innerHTML = '<span class="err">Только владелец.</span>';
+  });
+
+  function login(){ signInWithEmailAndPassword(auth,document.getElementById('e').value,document.getElementById('p').value).then(()=>location.href='panel.html').catch(x=>alert(x.message)); }
+
+  function publish(){
+    if(!isOwner && !isMedia) return;
+    const t=document.getElementById('nt').value.trim(), c=document.getElementById('nc').value.trim(), cat=document.getElementById('ncat').value;
+    if(!t||!c) { show('Заполни заголовок и текст'); return; }
+    addDoc(collection(db,'news'),{title:t,content:c,category:cat,author:display,published:true,authorId:uid,createdAt:new Date().toISOString()}).then(()=>{
+      show('Опубликовано (глобальная лента).', 'ok');
+      document.getElementById('nt').value=''; document.getElementById('nc').value='';
+    }).catch(x=>show('Ошибка: '+x.message,'err'));
+  }
+
+  function setRole(){
+    if(!isOwner) return;
+    const name=document.getElementById('ru').value.trim(), role=document.getElementById('rr').value;
+    if(!name||!role) {show('Заполни поля'); return; }
+    // ищем по display (для простоты; в продакшене — по uid)
+    getDocs(query(collection(db,'users'), where('display','==',name))).then(snap => {
+      if(!snap.docs.length) { show('Не найдено', 'err'); return; }
+      const d = snap.docs[0];
+      setDoc(d, {role: role}).then(()=>show('Готово.', 'ok'));
+    }).catch(x=>show(x.message,'err'));
+  }
+
+  function show(txt,cls){ const s=document.getElementById('s2'); s.textContent=txt; s.className='status '+cls; s.style.display='block'; setTimeout(()=>s.style.display='none',3000); }
+});
+</script>
+</body>
+</html>
