@@ -5,27 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Залиповский вестник — Новости</title>
 <style>
-  :root{--bg:#0a0f1a;--card:#121a2a;--border:#00d4ff;--text:#e8e8f0;--dim:#8a95a8}
+  :root{--bg:#070710;--deep:#05050a;--accent:#00d4ff;--text:#e8e8f0;--dim:#8a95a8}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{background:var(--bg);color:var(--text);padding:2rem}
-  .nav{position:sticky;top:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 2rem;margin-bottom:1.5rem;box-shadow:0 4px 20px rgba(0,212,255,0.08)}
-  .nav-inner{display:flex;gap:1.5rem;align-items:center}
+  body{background:var(--deep);color:var(--text);padding:2.5rem}
+  .hero-bg{position:fixed;inset:0;z-index:0;background:linear-gradient(135deg,#1a1a2e 0%,#0d0d1f 50%,#05050a 100%);background-size:400% 400%;animation:move 15s ease-in-out infinite}
+  @keyframes move{0%{left:20%}100%{left:-20%}}
+  .nav{position:sticky;top:0;z-index:10;background:rgba(255,255,255,0.08);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.12);border-radius:24px;padding:1.2rem 2rem;margin-bottom:2rem;box-shadow:0 8px 32px rgba(0,0,0,0.25)}
+  .nav-inner{display:flex;gap:1.4rem;align-items:center}
   .nav-inner a{color:var(--dim);text-decoration:none;font-size:0.95rem}
   .nav-inner a:hover{color:var(--accent)}
-  .hero{text-align:center;margin-bottom:1.5rem}
+  .hero{text-align:center;margin-bottom:2rem}
   .hero h1{font-size:2.2rem;color:var(--accent);margin-bottom:0.4rem}
-  .feed{max-width:960px;margin:0 auto}
-  .news-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.6rem;margin-bottom:1.4rem;transition:border-color 0.2s}
-  .news-card:hover{border-color:rgba(0,212,255,0.35)}
-  .news-card .meta{color:var(--dim);font-size:0.85rem;margin-bottom:0.6rem}
-  .news-card h2{font-size:1.3rem;color:var(--text);margin-bottom:0.5rem}
-  .news-card p{color:#d0d0e0;font-size:1rem;line-height:1.6}
-  .empty{border:1px solid var(--border);border-radius:16px;padding:2.5rem;text-align:center;color:var(--dim)}
+  .card{background:rgba(255,255,255,0.08);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border:1px solid rgba(0,212,255,0.18);border-radius:24px;padding:1.6rem;margin-bottom:1.4rem;transition:transform 0.25s,box-shadow 0.25s}
+  .card:hover{transform:translateY(-3px);box-shadow:0 12px 40px rgba(0,212,255,0.12);border-color:rgba(0,212,255,0.35)}
+  .card .meta{color:var(--dim);font-size:0.85rem;margin-bottom:0.6rem}
+  .card h3{font-size:1.3rem;color:var(--text);margin-bottom:0.5rem}
+  .card p{color:#d0d0e0;font-size:1rem;line-height:1.6}
+  .empty{border:1px solid rgba(0,212,255,0.25);border-radius:24px;padding:3rem;text-align:center;color:var(--dim)}
   @media(max-width:640px){body{padding:1.5rem}}
 </style>
 </head>
 <body>
 
+<div class="hero-bg"></div>
 <nav class="nav"><div class="nav-inner"><a href="index.html">← Назад</a> <a href="panel.html">Панель</a></div></nav>
 <section class="hero"><h1>Глобальные новости</h1></section>
 <section class="feed" id="feed"></section>
@@ -40,14 +42,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const feed = document.getElementById('feed');
 
-const q = query(collection(db,'news'), where('published','==',true));
-getDocs(q).then(snap => {
+getDocs(query(collection(db,'news'), where('published','==',true))).then(snap => {
   if(!snap.docs.length) { feed.innerHTML = '<div class="empty">Новей пока нет.</div>'; return; }
   feed.innerHTML = snap.docs.map(d => {
     const data = d.data();
     const dt = new Date(data.createdAt).toLocaleDateString('ru-RU');
     const c = data.content.substring(0,160) + (data.content.length>160?'…':'');
-    return `<div class="news-card"><div class="meta">${dt} • ${data.author}</div><h3>${data.title}</h3><p>${c}</p></div>`;
+    return `<div class="card"><div class="meta">${dt} • ${data.author}</div><h3>${data.title}</h3><p>${c}</p></div>`;
   }).join('');
 });
 </script>
