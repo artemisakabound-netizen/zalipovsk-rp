@@ -1,47 +1,73 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Залиповский вестник</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: #05050a;
-            color: #e8e8f0;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-        }
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 2rem;
-            color: #00d4ff;
-        }
-        .row { margin-top: 2rem; }
-        button {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            background: #00d4ff;
-            color: #05050a;
-            font-size: 1rem;
-            cursor: pointer;
-        }
-        button:hover { opacity: 0.9; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Залиповский вестник</title>
+<style>
+:*{margin:0;padding:0;box-sizing:border-box}
+body{background:#05050a;color:#e8e8f0;font-family:'Segoe UI',Tahoma,sans-serif;padding:2rem}
+.nav{display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap}
+.nav a{color:#8a8a9a;text-decoration:none;font-size:0.9rem}
+.card{background:#121220;border:1px solid #00d4ff;border-radius:12px;padding:1.2rem;margin-bottom:1rem}
+.meta{color:#8a8a9a;font-size:0.85rem;margin-bottom:0.6rem}
+h1{color:#00d4ff;margin-bottom:1rem}
+.empty{color:#8a8a9a;style:border:1px solid #00d4ff;border-radius:12px;padding:2rem;text-align:center}
+button{padding:10px 16px;border:none;border-radius:8px;background:#00d4ff;color:#05050a;cursor:pointer;font-size:0.95rem}
+button:hover{opacity:0.9}
+.badge{padding:4px 8px;border-radius:6px;background:#00d4ff;color:#05050a;font-size:0.8rem}
+.danger{color:#ff6b6b}
+</style>
 </head>
 <body>
 
-    <h1>Залиповский вестник</h1>
+<nav class="nav">
+  <a href="index.html">Главная</a>
+  <a href="news.html">Новости</a>
+  <a href="panel.html">Панель</a>
+</nav>
 
-    <div class="row">
-        <button onclick="window.open('https://www.roblox.com','_blank')">Roblox</button>
-        <button style="margin-left:1rem;" onclick="window.open('https://discord.gg/3VEQvRupk','_blank')">Discord</button>
-    </div>
+<h1>Залиповский вестник</h1>
 
+<div id="feed"></div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js';
+import { getFirestore, collection, query, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js';
+
+// ЗАМЕНИ на свой объект из Firebase Console (Project Settings → </> → Web)
+const firebaseConfig = {
+  apiKey: "AIzaSy...",
+  authDomain: "имя-проекта.firebaseapp.com",
+  projectId: "имя-проекта",
+  storageBucket: "имя-проекта.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abc"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const feed = document.getElementById('feed');
+
+onAuthStateChanged(user => {
+  if(!user) {
+    feed.innerHTML = `<p>Для работы нужно войти. Email: <input id="e" placeholder="email"> Пароль: <input id="p" type="password" placeholder="password"> <button onclick="login()">Войти</button></p>`;
+    return;
+  }
+  const uid = user.uid;
+  const q = query(collection(db,'news'), where('published','==',true));
+  getDocs(q).then(snap => {
+    if(!snap.docs.length) { feed.innerHTML = '<div class="empty">Глобальных новостей пока нет.</div>'; return; }
+    feed.innerHTML = snap.docs.map(d => {
+      const data = d.data();
+      return `<div class="card"><div class="meta">${new Date(data.createdAt).toLocaleDateString('ru-RU')} • ${data.author}</div><h3>${data.title}</h3><p>${data.content.substring(0,120)}${data.content.length>120?'…':''}</p></div>`;
+    }).join('');
+  });
+});
+
+function login(){ const e=document.getElementById('e').value, p=document.getElementById('p').value; signInWithEmailAndPassword(auth,e,p).then(()=>location.href='index.html').catch(x=>alert(x.message)); }
+</script>
 </body>
 </html>
