@@ -5,38 +5,81 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Залиповский вестник</title>
 <style>
-:*{margin:0;padding:0;box-sizing:border-box}
-body{background:#05050a;color:#e8e8f0;font-family:'Segoe UI',Tahoma,sans-serif;padding:2rem}
-.nav{display:flex;gap:1.5rem;margin-bottom:1rem;flex-wrap:wrap}
-.nav a{color:#8a8a9a;text-decoration:none;font-size:0.9rem}
-.card{background:#121220;border:1px solid #00d4ff;border-radius:12px;padding:1.2rem;margin-bottom:1rem}
-.meta{color:#8a8a9a;font-size:0.85rem;margin-bottom:0.6rem}
-h1{color:#00d4ff;margin-bottom:1rem}
-.empty{color:#8a8a9a;style:border:1px solid #00d4ff;border-radius:12px;padding:2rem;text-align:center}
-button{padding:10px 16px;border:none;border-radius:8px;background:#00d4ff;color:#05050a;cursor:pointer;font-size:0.95rem}
-button:hover{opacity:0.9}
-.badge{padding:4px 8px;border-radius:6px;background:#00d4ff;color:#05050a;font-size:0.8rem}
-.danger{color:#ff6b6b}
+  :root{
+    --bg:#0a0f1a;
+    --card:#121a2a;
+    --border:#00d4ff;
+    --text:#e8e8f0;
+    --dim:#8a95a8;
+    --accent:#00d4ff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',Tahoma,sans-serif;padding:2rem}
+
+  .nav{position:sticky;top:0;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1rem 2rem;margin-bottom:2rem;box-shadow:0 4px 20px rgba(0,212,255,0.08)}
+  .nav-inner{display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap}
+  .logo{font-size:1.5rem;font-weight:800;color:var(--accent)}
+  .nav-links{list-style:none;display:flex;gap:1.5rem}
+  .nav-links a{color:var(--dim);text-decoration:none;font-size:0.95rem}
+  .nav-links a:hover{color:var(--accent)}
+
+  .hero{max-width:960px;margin:0 auto;text-align:center;margin-bottom:2rem}
+  .hero h1{font-size:2.8rem;color:var(--accent);margin-bottom:0.4rem;letter-spacing:-0.02em}
+  .hero p{color:var(--dim);font-size:1.05rem;margin-bottom:1.8rem}
+
+  .feed{max-width:960px;margin:0 auto}
+  .news-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.6rem;margin-bottom:1.4rem;transition:border-color 0.2s}
+  .news-card:hover{border-color:rgba(0,212,255,0.35)}
+  .news-card .meta{color:var(--dim);font-size:0.85rem;margin-bottom:0.6rem}
+  .news-card h2{font-size:1.35rem;color:var(--text);margin-bottom:0.5rem}
+  .news-card p{color:#d0d0e0;font-size:1rem;line-height:1.6;margin-bottom:0.4rem}
+
+  .empty{border:1px solid var(--border);border-radius:16px;padding:2.5rem;text-align:center;color:var(--dim)}
+
+  .actions{display:flex;gap:1rem;margin-top:2rem;flex-wrap:wrap}
+  .btn{padding:12px 24px;border:none;border-radius:12px;background:var(--accent);color:#05050a;font-size:1rem;cursor:pointer;transition:transform 0.15s,opacity 0.2s}
+  .btn:hover{transform:scale(1.02);opacity:0.95}
+  .btn-secondary{background:rgba(0,212,255,0.15);color:var(--accent)}
+  .btn-secondary:hover{background:rgba(0,212,255,0.25)}
+
+  @media (max-width:640px){
+    .hero h1{font-size:2.2rem}
+    .nav-inner{flex-direction:column;gap:0.8rem}
+  }
 </style>
 </head>
 <body>
 
 <nav class="nav">
-  <a href="index.html">Главная</a>
-  <a href="news.html">Новости</a>
-  <a href="panel.html">Панель</a>
+  <div class="nav-inner">
+    <div class="logo">ЗБ — Залиповский вестник</div>
+    <ul class="nav-links">
+      <li><a href="index.html">Главная</a></li>
+      <li><a href="news.html">Новости</a></li>
+      <li><a href="panel.html">Панель</a></li>
+    </ul>
+  </div>
 </nav>
 
-<h1>Залиповский вестник</h1>
+<section class="hero">
+  <h1>Залиповский вестник</h1>
+  <p>Глобальная лента новостей ролевого проекта. Публикуют редакции СМИ и администрация.</p>
+</section>
 
-<div id="feed"></div>
+<section class="feed" id="feed"></section>
+
+<section class="actions">
+  <button class="btn" onclick="window.open('https://www.roblox.com/games/125350055595066/Zarechensk-RP','_blank')">Играть (Roblox)</button>
+  <button class="btn btn-secondary" onclick="window.open('https://discord.gg/3VEQvRupk','_blank')">Discord</button>
+</section>
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js';
-import { getFirestore, collection, query, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-auth.js';
+import { getFirestore, collection, query, getDocs } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-firestore.js';
 
-// ЗАМЕНИ на свой объект из Firebase Console (Project Settings → </> → Web)
+// ==========================================
+// ЗАМЕНИ НА ОБЪЕКТ ИЗ Firebase Console (Project Settings → иконка </> → Web → Register app)
 const firebaseConfig = {
   apiKey: "AIzaSy...",
   authDomain: "имя-проекта.firebaseapp.com",
@@ -45,29 +88,44 @@ const firebaseConfig = {
   messagingSenderId: "123456789",
   appId: "1:123456789:web:abc"
 };
+// ==========================================
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 const feed = document.getElementById('feed');
 
 onAuthStateChanged(user => {
-  if(!user) {
-    feed.innerHTML = `<p>Для работы нужно войти. Email: <input id="e" placeholder="email"> Пароль: <input id="p" type="password" placeholder="password"> <button onclick="login()">Войти</button></p>`;
+  if (!user) {
+    feed.innerHTML = `
+      <div class="empty">
+        <p>Для публикации нужно войти.</p>
+        <div style="margin-top:1rem;display:flex;gap:0.6rem;flex-wrap:wrap">
+          <input id="ie" placeholder="Email" style="padding:10px;border:1px solid #333;border-radius:10px;background:#0a0a0a;color:#e8e8f0;width:220px;font-size:1rem">
+          <input id="ip" type="password" placeholder="Пароль" style="padding:10px;border:1px solid #333;border-radius:10px;background:#0a0a0a;color:#e8e8f0;width:220px;font-size:1rem">
+          <button class="btn" onclick="doLogin()">Войти</button>
+        </div>
+      </div>`;
     return;
   }
-  const uid = user.uid;
+
   const q = query(collection(db,'news'), where('published','==',true));
   getDocs(q).then(snap => {
-    if(!snap.docs.length) { feed.innerHTML = '<div class="empty">Глобальных новостей пока нет.</div>'; return; }
+    if (!snap.docs.length) { feed.innerHTML = '<div class="empty">Глобальных новостей пока нет.</div>'; return; }
     feed.innerHTML = snap.docs.map(d => {
       const data = d.data();
-      return `<div class="card"><div class="meta">${new Date(data.createdAt).toLocaleDateString('ru-RU')} • ${data.author}</div><h3>${data.title}</h3><p>${data.content.substring(0,120)}${data.content.length>120?'…':''}</p></div>`;
+      const dt = new Date(data.createdAt).toLocaleDateString('ru-RU');
+      const content = data.content.substring(0,140) + (data.content.length>140?'…':'');
+      return `<div class="news-card"><div class="meta">${dt} • ${data.author}</div><h3>${data.title}</h3><p>${content}</p></div>`;
     }).join('');
   });
 });
 
-function login(){ const e=document.getElementById('e').value, p=document.getElementById('p').value; signInWithEmailAndPassword(auth,e,p).then(()=>location.href='index.html').catch(x=>alert(x.message)); }
+function doLogin(){
+  signInWithEmailAndPassword(auth,document.getElementById('ie').value,document.getElementById('ip').value)
+    .then(()=>location.href='index.html')
+    .catch(x=>alert(x.message));
+}
 </script>
 </body>
 </html>
