@@ -2,9 +2,46 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Залиповский вестник</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #05050a;
+            color: #e8e8f0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+            color: #00d4ff;
+        }
+        .row { margin-top: 2rem; }
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: #00d4ff;
+            color: #05050a;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        button:hover { opacity: 0.9; }
+    </style>
 </head>
 <body>
+
     <h1>Залиповский вестник</h1>
+
+    <div class="row">
+        <button onclick="window.open('https://www.roblox.com','_blank')">Roblox</button>
+        <button style="margin-left:1rem;" onclick="window.open('https://discord.gg/3VEQvRupk','_blank')">Discord</button>
+    </div>
+
 </body>
 </html>
